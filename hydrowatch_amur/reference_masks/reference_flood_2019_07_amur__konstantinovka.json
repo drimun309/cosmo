@@ -1,0 +1,43 @@
+{
+ "aoi_id": "konstantinovka",
+ "event_id": "flood_2019_07_amur",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 643.54,
+  "flood_km2": 6.4354,
+  "flood_share_of_aoi": 0.005209,
+  "water_pre_ha": 6774.1,
+  "water_pre_km2": 67.741,
+  "water_pre_share_of_aoi": 0.054831,
+  "water_peak_ha": 7267.04,
+  "water_peak_km2": 72.6704,
+  "water_peak_share_of_aoi": 0.058821,
+  "permanent_ha": 5435.74,
+  "permanent_km2": 54.3574,
+  "permanent_share_of_aoi": 0.043998,
+  "receded_ha": 320.96,
+  "receded_km2": 3.2096,
+  "receded_share_of_aoi": 0.002598,
+  "aoi_ha": 123544.96,
+  "aoi_km2": 1235.45,
+  "water_gain_ha": 492.94,
+  "water_gain_km2": 4.9294,
+  "water_gain_pct": 7.28,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "flood_2019_07_amur__konstantinovka",
+ "event_peak_date": "2019-07-27",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

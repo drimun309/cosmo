@@ -1,0 +1,43 @@
+{
+ "aoi_id": "poyarkovo",
+ "event_id": "flood_2021_06_amur",
+ "reference_source": "gsw",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 2167.31,
+  "flood_km2": 21.6731,
+  "flood_share_of_aoi": 0.019871,
+  "water_pre_ha": 8723.32,
+  "water_pre_km2": 87.2332,
+  "water_pre_share_of_aoi": 0.079979,
+  "water_peak_ha": 8909.96,
+  "water_peak_km2": 89.0996,
+  "water_peak_share_of_aoi": 0.08169,
+  "permanent_ha": 4804.67,
+  "permanent_km2": 48.0467,
+  "permanent_share_of_aoi": 0.044051,
+  "receded_ha": 1289.12,
+  "receded_km2": 12.8912,
+  "receded_share_of_aoi": 0.011819,
+  "aoi_ha": 109070.6,
+  "aoi_km2": 1090.706,
+  "water_gain_ha": 186.64,
+  "water_gain_km2": 1.8664,
+  "water_gain_pct": 2.14,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "flood_2021_06_amur__poyarkovo",
+ "event_peak_date": "2021-06-27",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

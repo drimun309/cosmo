@@ -1,0 +1,43 @@
+{
+ "aoi_id": "svobodny",
+ "event_id": "baseline_2018_09_low",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 44.22,
+  "flood_km2": 0.4422,
+  "flood_share_of_aoi": 0.000333,
+  "water_pre_ha": 4626.13,
+  "water_pre_km2": 46.2613,
+  "water_pre_share_of_aoi": 0.03481,
+  "water_peak_ha": 3111.67,
+  "water_peak_km2": 31.1167,
+  "water_peak_share_of_aoi": 0.023414,
+  "permanent_ha": 3871.61,
+  "permanent_km2": 38.7161,
+  "permanent_share_of_aoi": 0.029133,
+  "receded_ha": 498.16,
+  "receded_km2": 4.9816,
+  "receded_share_of_aoi": 0.003748,
+  "aoi_ha": 132896.5,
+  "aoi_km2": 1328.965,
+  "water_gain_ha": -1514.46,
+  "water_gain_km2": -15.1446,
+  "water_gain_pct": -32.74,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "baseline_2018_09_low__svobodny",
+ "event_peak_date": "2018-09-12",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

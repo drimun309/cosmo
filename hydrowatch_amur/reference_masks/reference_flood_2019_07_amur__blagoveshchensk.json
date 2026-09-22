@@ -1,0 +1,43 @@
+{
+ "aoi_id": "blagoveshchensk",
+ "event_id": "flood_2019_07_amur",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 386.3,
+  "flood_km2": 3.863,
+  "flood_share_of_aoi": 0.002342,
+  "water_pre_ha": 2866.89,
+  "water_pre_km2": 28.6689,
+  "water_pre_share_of_aoi": 0.017384,
+  "water_peak_ha": 8894.42,
+  "water_peak_km2": 88.9442,
+  "water_peak_share_of_aoi": 0.053933,
+  "permanent_ha": 7247.38,
+  "permanent_km2": 72.4738,
+  "permanent_share_of_aoi": 0.043946,
+  "receded_ha": 107.09,
+  "receded_km2": 1.0709,
+  "receded_share_of_aoi": 0.000649,
+  "aoi_ha": 164916.78,
+  "aoi_km2": 1649.168,
+  "water_gain_ha": 6027.53,
+  "water_gain_km2": 60.2753,
+  "water_gain_pct": 210.25,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "flood_2019_07_amur__blagoveshchensk",
+ "event_peak_date": "2019-07-27",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

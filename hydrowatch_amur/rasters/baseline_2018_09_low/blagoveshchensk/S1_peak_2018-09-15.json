@@ -1,0 +1,19 @@
+{
+  "pair_id": "baseline_2018_09_low__blagoveshchensk",
+  "aoi_id": "blagoveshchensk",
+  "event_id": "baseline_2018_09_low",
+  "event_peak_date": "2018-09-12",
+  "crs": "EPSG:32652",
+  "produced_by": "HydroWatch dataset pipeline",
+  "sensor": "Sentinel-1 IW GRD (dB, sigma0)",
+  "window": "peak",
+  "scene_date": "2018-09-15",
+  "orbit_pass": "DESCENDING",
+  "relative_orbit": 105,
+  "bands": [
+    "VV",
+    "VH",
+    "VV_VH_ratio"
+  ],
+  "note": "EE-коллекция COPERNICUS/S1_GRD: применены орбитальные файлы, удалён шум границы и тепловой шум, выполнена радиометрическая калибровка и террейн-коррекция"
+}

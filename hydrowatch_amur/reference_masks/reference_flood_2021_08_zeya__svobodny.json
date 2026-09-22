@@ -1,0 +1,41 @@
+{
+ "aoi_id": "svobodny",
+ "event_id": "flood_2021_08_zeya",
+ "reference_source": "gfm+consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 2178.96,
+  "flood_km2": 21.7896,
+  "flood_share_of_aoi": 0.016788,
+  "water_pre_ha": 3972.36,
+  "water_pre_km2": 39.7236,
+  "water_pre_share_of_aoi": 0.030606,
+  "water_peak_ha": 4740.89,
+  "water_peak_km2": 47.4089,
+  "water_peak_share_of_aoi": 0.036527,
+  "permanent_ha": 3596.47,
+  "permanent_km2": 35.9647,
+  "permanent_share_of_aoi": 0.02771,
+  "receded_ha": 0.66,
+  "receded_km2": 0.0066,
+  "receded_share_of_aoi": 5e-06,
+  "aoi_ha": 129790.03,
+  "aoi_km2": 1297.9,
+  "water_gain_ha": 768.53,
+  "water_gain_km2": 7.6853,
+  "water_gain_pct": 19.35
+ },
+ "pair_id": "flood_2021_08_zeya__svobodny",
+ "event_peak_date": "2021-08-12",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

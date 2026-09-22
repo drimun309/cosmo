@@ -1,0 +1,43 @@
+{
+ "aoi_id": "belogorsk",
+ "event_id": "flood_2019_07_amur",
+ "reference_source": "gsw",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 187.19,
+  "flood_km2": 1.8719,
+  "flood_share_of_aoi": 0.002048,
+  "water_pre_ha": 694.27,
+  "water_pre_km2": 6.9427,
+  "water_pre_share_of_aoi": 0.007597,
+  "water_peak_ha": 869.26,
+  "water_peak_km2": 8.6926,
+  "water_peak_share_of_aoi": 0.009512,
+  "permanent_ha": 406.87,
+  "permanent_km2": 4.0687,
+  "permanent_share_of_aoi": 0.004452,
+  "receded_ha": 44.26,
+  "receded_km2": 0.4426,
+  "receded_share_of_aoi": 0.000484,
+  "aoi_ha": 91385.13,
+  "aoi_km2": 913.851,
+  "water_gain_ha": 174.99,
+  "water_gain_km2": 1.7499,
+  "water_gain_pct": 25.2,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "flood_2019_07_amur__belogorsk",
+ "event_peak_date": "2019-07-27",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

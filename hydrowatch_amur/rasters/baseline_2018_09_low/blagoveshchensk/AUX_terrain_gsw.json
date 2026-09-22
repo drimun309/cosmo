@@ -1,0 +1,22 @@
+{
+  "pair_id": "baseline_2018_09_low__blagoveshchensk",
+  "aoi_id": "blagoveshchensk",
+  "event_id": "baseline_2018_09_low",
+  "event_peak_date": "2018-09-12",
+  "crs": "EPSG:32652",
+  "produced_by": "HydroWatch dataset pipeline",
+  "bands": [
+    "slope",
+    "hand",
+    "occurrence",
+    "seasonality",
+    "max_extent",
+    "builtup"
+  ],
+  "sources": [
+    "Copernicus DEM GLO-30",
+    "MERIT Hydro v1.0.1",
+    "JRC GSW v1.4",
+    "ESA WorldCover v200"
+  ]
+}

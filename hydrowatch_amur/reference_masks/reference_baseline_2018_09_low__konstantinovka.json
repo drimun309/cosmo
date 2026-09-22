@@ -1,0 +1,43 @@
+{
+ "aoi_id": "konstantinovka",
+ "event_id": "baseline_2018_09_low",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 25.01,
+  "flood_km2": 0.2501,
+  "flood_share_of_aoi": 0.000202,
+  "water_pre_ha": 9314.31,
+  "water_pre_km2": 93.1431,
+  "water_pre_share_of_aoi": 0.075392,
+  "water_peak_ha": 1730.91,
+  "water_peak_km2": 17.3091,
+  "water_peak_share_of_aoi": 0.01401,
+  "permanent_ha": 5435.74,
+  "permanent_km2": 54.3574,
+  "permanent_share_of_aoi": 0.043998,
+  "receded_ha": 3587.95,
+  "receded_km2": 35.8795,
+  "receded_share_of_aoi": 0.029042,
+  "aoi_ha": 123544.96,
+  "aoi_km2": 1235.45,
+  "water_gain_ha": -7583.4,
+  "water_gain_km2": -75.834,
+  "water_gain_pct": -81.42,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "baseline_2018_09_low__konstantinovka",
+ "event_peak_date": "2018-09-12",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "aoi_id": "blagoveshchensk",
+ "event_id": "baseline_2018_09_low",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 197.01,
+  "flood_km2": 1.9701,
+  "flood_share_of_aoi": 0.001195,
+  "water_pre_ha": 9815.18,
+  "water_pre_km2": 98.1518,
+  "water_pre_share_of_aoi": 0.059516,
+  "water_peak_ha": 8469.28,
+  "water_peak_km2": 84.6928,
+  "water_peak_share_of_aoi": 0.051355,
+  "permanent_ha": 7247.38,
+  "permanent_km2": 72.4738,
+  "permanent_share_of_aoi": 0.043946,
+  "receded_ha": 1039.85,
+  "receded_km2": 10.3985,
+  "receded_share_of_aoi": 0.006305,
+  "aoi_ha": 164916.78,
+  "aoi_km2": 1649.168,
+  "water_gain_ha": -1345.9,
+  "water_gain_km2": -13.459,
+  "water_gain_pct": -13.71,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "baseline_2018_09_low__blagoveshchensk",
+ "event_peak_date": "2018-09-12",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

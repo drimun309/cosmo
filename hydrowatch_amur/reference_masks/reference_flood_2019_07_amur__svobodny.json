@@ -1,0 +1,43 @@
+{
+ "aoi_id": "svobodny",
+ "event_id": "flood_2019_07_amur",
+ "reference_source": "consensus",
+ "accepted": true,
+ "reject_reason": "",
+ "stats": {
+  "flood_ha": 213.27,
+  "flood_km2": 2.1327,
+  "flood_share_of_aoi": 0.001605,
+  "water_pre_ha": 575.21,
+  "water_pre_km2": 5.7521,
+  "water_pre_share_of_aoi": 0.004328,
+  "water_peak_ha": 991.45,
+  "water_peak_km2": 9.9145,
+  "water_peak_share_of_aoi": 0.00746,
+  "permanent_ha": 3871.61,
+  "permanent_km2": 38.7161,
+  "permanent_share_of_aoi": 0.029133,
+  "receded_ha": 19.72,
+  "receded_km2": 0.1972,
+  "receded_share_of_aoi": 0.000148,
+  "aoi_ha": 132896.5,
+  "aoi_km2": 1328.965,
+  "water_gain_ha": 416.24,
+  "water_gain_km2": 4.1624,
+  "water_gain_pct": 72.36,
+  "stats_source": "written_mask"
+ },
+ "pair_id": "flood_2019_07_amur__svobodny",
+ "event_peak_date": "2019-07-27",
+ "crs": "EPSG:32652",
+ "produced_by": "HydroWatch dataset pipeline",
+ "scale_m": 10,
+ "stats_source": "written_mask",
+ "bands": [
+  "flood",
+  "water_pre",
+  "water_peak",
+  "permanent",
+  "receded"
+ ]
+}

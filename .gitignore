@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Выходы пайплайна
+/out/
+/predictions/
+/submissions/
+*.tif.lock
+*.tmp
+
+# Скачанные сцены Sentinel — большие, появятся после fetch_scenes.py
+hydrowatch_amur/rasters/**/S1_*.tif
+hydrowatch_amur/rasters/**/SENTINEL2_*.tif
+
+# Секреты и локальные настройки
+.env
+.env.*
+*.local
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
