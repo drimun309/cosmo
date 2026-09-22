@@ -35,14 +35,27 @@ S2_BANDS = ("B02", "B03", "B04", "B08", "B11", "B12")
 CLOUD_SCL = {0, 1, 3, 8, 9, 10, 11}
 
 
-def _get(url, payload=None):
+def _get(url, payload=None, retries=4):
+    import time
     data = None if payload is None else json.dumps(payload).encode()
     headers = {"User-Agent": "hydrowatch"}
     if data:
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers)
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return json.loads(resp.read().decode())
+    last = None
+    for i in range(retries):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers)
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 429 or e.code >= 500:
+                wait = 10 * (i + 1)
+                print(f"  HTTP {e.code}, жду {wait}s", flush=True)
+                time.sleep(wait)
+                last = e
+                continue
+            raise
+    raise last
 
 
 def search(collection, bbox, day, query=None):
@@ -236,7 +249,7 @@ def main():
     p.add_argument("--data", type=Path, default=hw.DEFAULT_DATA)
     p.add_argument("--only", help="один pair_id")
     args = p.parse_args()
-    ok = True
+    fails = []
     for row in hw.load_pairs(args.data):
         if args.only and row["pair_id"] != args.only:
             continue
@@ -245,15 +258,19 @@ def main():
         transform, h, w = grid(template)
         bbox = bbox_wgs84(transform, h, w)
         orbit = float(row["relative_orbit"])
-        print(row["pair_id"], f"{h}x{w}", "orbit", int(orbit))
-        ok &= fetch_s1(folder, "S1_pre_", row["date_pre_sar"], orbit, bbox, transform, h, w, template)
-        ok &= fetch_s1(folder, "S1_peak_", row["date_peak_sar"], orbit, bbox, transform, h, w, template)
+        print(row["pair_id"], f"{h}x{w}", "orbit", int(orbit), flush=True)
+        if not fetch_s1(folder, "S1_pre_", row["date_pre_sar"], orbit, bbox, transform, h, w, template):
+            fails.append((row["pair_id"], "S1_pre"))
+        if not fetch_s1(folder, "S1_peak_", row["date_peak_sar"], orbit, bbox, transform, h, w, template):
+            fails.append((row["pair_id"], "S1_peak"))
         if row["date_pre_opt"]:
             fetch_s2(folder, "SENTINEL2_pre_", row["date_pre_opt"], bbox, transform, h, w, template)
         if row["date_peak_opt"]:
             fetch_s2(folder, "SENTINEL2_peak_", row["date_peak_opt"], bbox, transform, h, w, template)
-    if not ok:
-        raise SystemExit(1)
+    if fails:
+        print("\nПары с пустыми S1:", flush=True)
+        for pair, what in fails:
+            print(f"  {pair}: {what} (нет валидных пикселей, AOI вне сцены)")
 
 
 if __name__ == "__main__":
