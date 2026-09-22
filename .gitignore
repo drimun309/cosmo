@@ -27,6 +27,11 @@ env/
 hydrowatch_amur/rasters/**/S1_*.tif
 hydrowatch_amur/rasters/**/SENTINEL2_*.tif
 
+# AUX_terrain_gsw.tif — 100-140 МБ, выше лимита GitHub 100 МБ
+# (исключение: оригинальный из lite-архива, ~7 МБ, остаётся в репе как эталон)
+hydrowatch_amur/rasters/**/AUX_terrain_gsw.tif
+!hydrowatch_amur/rasters/baseline_2018_09_low/blagoveshchensk/AUX_terrain_gsw.tif
+
 # Секреты и локальные настройки
 .env
 .env.*

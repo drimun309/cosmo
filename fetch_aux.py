@@ -41,14 +41,28 @@ WC_BANDS = ("map",)
 BUILTUP_CLASS = 50  # ESA WorldCover: built-up
 
 
-def get(url, payload=None):
+def get(url, payload=None, retries=4):
+    import time
+    import urllib.error
     data = None if payload is None else json.dumps(payload).encode()
     headers = {**HEAD}
     if data:
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers)
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return json.loads(resp.read().decode())
+    last = None
+    for i in range(retries):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers)
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 429 or e.code >= 500:
+                wait = 10 * (i + 1)
+                print(f"  HTTP {e.code}, жду {wait}s", flush=True)
+                time.sleep(wait)
+                last = e
+                continue
+            raise
+    raise last
 
 
 def search_first(collection, bbox):
@@ -61,6 +75,19 @@ def search_first(collection, bbox):
         },
     ).get("features", [])
     return feats[0] if feats else None
+
+
+def search_all(collection, bbox, limit=20):
+    """Возвращает все фичи, пересекающиеся с bbox."""
+    feats = get(
+        STAC,
+        {
+            "collections": [collection],
+            "bbox": [round(v, 6) for v in bbox],
+            "limit": limit,
+        },
+    ).get("features", [])
+    return feats
 
 
 def sign(href):
@@ -110,8 +137,10 @@ def read_band(url, transform, h, w):
 def read_band_window(url, transform, h, w, resampling=Resampling.bilinear):
     """Читает канал через окно в источнике (быстрее на больших DEM)."""
     import rasterio
+    from rasterio.errors import WindowError
     from rasterio.transform import array_bounds
     from rasterio.warp import transform_bounds
+    from rasterio.windows import from_bounds, Window
 
     with rasterio.open(url) as src:
         west, south, east, north = array_bounds(h, w, transform)
@@ -121,10 +150,12 @@ def read_band_window(url, transform, h, w, resampling=Resampling.bilinear):
             )
         else:
             left, bottom, right, top = west, south, east, north
-        from rasterio.windows import from_bounds, Window
 
         window = from_bounds(left, bottom, right, top, src.transform)
-        window = window.intersection(Window(0, 0, src.width, src.height))
+        try:
+            window = window.intersection(Window(0, 0, src.width, src.height))
+        except WindowError:
+            return None
         if window.width < 1 or window.height < 1:
             return None
         data = src.read(1, window=window).astype(np.float32)
@@ -176,6 +207,21 @@ def hand_proxy(dem):
     return hand
 
 
+def mosaic_band(features, asset_key, transform, h, w, resampling):
+    """Мозаика канала из нескольких фичей (для DEM-тайлов)."""
+    dest = np.full((h, w), np.nan, np.float32)
+    used = []
+    for feat in features:
+        url = sign(feat["assets"][asset_key]["href"])
+        part = read_band_window(url, transform, h, w, resampling)
+        if part is None:
+            continue
+        fill = ~np.isfinite(dest) & np.isfinite(part)
+        dest[fill] = part[fill]
+        used.append(feat["id"])
+    return dest, used
+
+
 def fetch_one(data: Path, row: dict) -> bool:
     folder = data / row["rasters_dir"]
     dest = folder / "AUX_terrain_gsw.tif"
@@ -189,54 +235,41 @@ def fetch_one(data: Path, row: dict) -> bool:
     bbox = bbox_wgs84(transform, h, w)
     print(f"{row['pair_id']}: {h}x{w}, bbox={[round(b,3) for b in bbox]}")
 
-    # 1. DEM GLO-30 -> slope, HAND
+    # 1. DEM GLO-30 -> slope, HAND (мозаика из всех пересекающихся тайлов)
     print("  ищу cop-dem-glo-30...", flush=True)
-    feat = search_first("cop-dem-glo-30", bbox)
-    if not feat:
+    feats = search_all("cop-dem-glo-30", bbox)
+    if not feats:
         print("  DEM не найден", flush=True)
         return False
-    dem_url = sign(feat["assets"]["data"]["href"])
-    dem = read_band_window(dem_url, transform, h, w, Resampling.bilinear)
-    if dem is None:
-        print("  DEM не выгрузился", flush=True)
+    dem, ids = mosaic_band(feats, "data", transform, h, w, Resampling.bilinear)
+    valid = np.isfinite(dem).mean()
+    if valid < 0.15:
+        print(f"  DEM покрывает только {valid:.2f} AOI — слишком мало, пропуск", flush=True)
         return False
     slope = slope_degrees(dem)
     hand = hand_proxy(dem)
-    print(f"  DEM записан ({feat['id']})", flush=True)
+    print(f"  DEM мозаика {len(ids)} тайлов, покрытие {valid:.2f}", flush=True)
 
     # 2. JRC GSW -> occurrence, seasonality, max_extent
     print("  ищу jrc-gsw...", flush=True)
-    feat = search_first("jrc-gsw", bbox)
-    if not feat:
+    feats = search_all("jrc-gsw", bbox)
+    if not feats:
         print("  GSW не найден", flush=True)
         return False
-    gsw_url = sign(feat["assets"]["occurrence"]["href"])
-    occurrence = read_band_window(gsw_url, transform, h, w, Resampling.bilinear)
-    if occurrence is None:
-        print("  GSW не выгрузился", flush=True)
-        return False
-    seasonality = read_band_window(
-        sign(feat["assets"]["seasonality"]["href"]),
-        transform, h, w, Resampling.nearest,
-    )
-    max_extent = read_band_window(
-        sign(feat["assets"]["max_extent"]["href"]),
-        transform, h, w, Resampling.nearest,
-    )
-    print(f"  GSW записан ({feat['id']})", flush=True)
+    occurrence, gsw_ids = mosaic_band(feats, "occurrence", transform, h, w, Resampling.bilinear)
+    seasonality, _ = mosaic_band(feats, "seasonality", transform, h, w, Resampling.nearest)
+    max_extent, _ = mosaic_band(feats, "extent", transform, h, w, Resampling.nearest)
+    print(f"  GSW мозаика {len(gsw_ids)} слоёв", flush=True)
 
     # 3. ESA WorldCover -> builtup (класс 50)
     print("  ищу esa-worldcover...", flush=True)
-    feat = search_first("esa-worldcover", bbox)
-    if not feat:
+    feats = search_all("esa-worldcover", bbox)
+    if not feats:
         print("  WorldCover не найден", flush=True)
         return False
-    wc = read_band_window(
-        sign(feat["assets"]["map"]["href"]),
-        transform, h, w, Resampling.nearest,
-    )
-    builtup = (np.where(np.isin(wc, [BUILTUP_CLASS]), 1.0, 0.0) * 100.0).astype(np.float32)
-    print(f"  WorldCover записан ({feat['id']})", flush=True)
+    wc, wc_ids = mosaic_band(feats, "map", transform, h, w, Resampling.nearest)
+    builtup = np.where(np.isin(wc, [BUILTUP_CLASS]), np.float32(100.0), np.float32(0.0))
+    print(f"  WorldCover мозаика {len(wc_ids)} тайлов", flush=True)
 
     # 4. Сборка 6-канального стэка
     stack = np.stack([slope, hand, occurrence, seasonality, max_extent, builtup])

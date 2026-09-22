@@ -1,0 +1,17 @@
+{
+  "bands": [
+    "VV",
+    "VH",
+    "VV_VH_ratio"
+  ],
+  "shape": [
+    3052,
+    4048
+  ],
+  "scene_date": "2021-07-01",
+  "crs": "EPSG:32652",
+  "source": "Microsoft Planetary Computer",
+  "scenes": [
+    "S1B_IW_GRDH_1SDV_20210701T214443_20210701T214508_027606_034B89_rtc"
+  ]
+}

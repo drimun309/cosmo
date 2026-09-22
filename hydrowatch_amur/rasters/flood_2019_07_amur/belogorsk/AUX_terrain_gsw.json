@@ -1,0 +1,23 @@
+{
+  "bands": [
+    "slope",
+    "hand",
+    "occurrence",
+    "seasonality",
+    "max_extent",
+    "builtup"
+  ],
+  "shape": [
+    3019,
+    3027
+  ],
+  "scale_m": 10.0,
+  "crs": "EPSG:32652",
+  "sources": [
+    "Copernicus DEM GLO-30",
+    "JRC GSW v1.4",
+    "ESA WorldCover v200"
+  ],
+  "hand_method": "min_filter_300px_proxy",
+  "builtup_class": 50
+}

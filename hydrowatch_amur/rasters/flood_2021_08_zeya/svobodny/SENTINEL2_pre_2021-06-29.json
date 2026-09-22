@@ -1,0 +1,23 @@
+{
+  "bands": [
+    "B3",
+    "B4",
+    "B8",
+    "B11",
+    "NDWI",
+    "MNDWI",
+    "NDVI",
+    "AWEIsh"
+  ],
+  "shape": [
+    3641,
+    3650
+  ],
+  "scene_date": "2021-06-29",
+  "crs": "EPSG:32652",
+  "source": "Microsoft Planetary Computer",
+  "scenes": [
+    "S2B_MSIL2A_20210629T022549_R046_T52UDB_20210630T084600",
+    "S2B_MSIL2A_20210629T022549_R046_T52UDC_20210630T095801"
+  ]
+}
