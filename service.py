@@ -278,7 +278,8 @@ def make_report(req: ReportRequest):
     descr = []
     if peak and pre:
         gain = peak - pre
-        descr.append(f"водное зеркало выросло на {gain:+.1f} га ({gain/100:+.3f} км²) с pre до peak")
+        sign_word = "выросло" if gain > 0 else ("сократилось" if gain < 0 else "не изменилось")
+        descr.append(f"водное зеркало {sign_word} на {abs(gain):.1f} га ({abs(gain)/100:.3f} км²) с pre до peak")
     if flood:
         descr.append(f"новое затопление {flood:.1f} га ({flood/100:.3f} км²) "
                      f"от {flood/float(row['aoi_km2'])*100:.3f}% AOI")
