@@ -10,6 +10,12 @@ env/
 *.egg-info/
 .pytest_cache/
 
+# Временные диагностические скрипты и логи
+/_*.py
+/_*.log
+/_*.txt
+*.log
+
 # Выходы пайплайна
 /out/
 /predictions/

@@ -10,7 +10,7 @@ import numpy as np
 import tifffile
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_DATA = ROOT / "hydrowatch_amur_dataset_lite" / "hydrowatch_amur"
+DEFAULT_DATA = ROOT / "hydrowatch_amur"
 
 # Веса и пороги знаменателя — из постановки, не из подбора.
 W_FLOOD, W_PEAK, W_PRE, W_SPEC = 0.45, 0.25, 0.15, 0.15

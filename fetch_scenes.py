@@ -144,7 +144,7 @@ def norm_diff(a, b):
     return out
 
 
-def write_stack(path: Path, stack, template: Path):
+def write_stack(path: Path, stack, template: Path, bands, scene_date, scene_meta=None):
     path.parent.mkdir(parents=True, exist_ok=True)
     tifffile.imwrite(
         path,
@@ -153,6 +153,18 @@ def write_stack(path: Path, stack, template: Path):
         compression="zlib",
         compressionargs={"level": 1},
         extratags=hw.geo_tags(template),
+    )
+    meta = {
+        "bands": list(bands),
+        "shape": list(stack.shape[1:]),
+        "scene_date": scene_date,
+        "crs": "EPSG:32652",
+        "source": "Microsoft Planetary Computer",
+    }
+    if scene_meta:
+        meta["scenes"] = scene_meta
+    path.with_suffix(".json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
 
@@ -169,7 +181,7 @@ def fetch_s1(folder, prefix, day, orbit, bbox, transform, h, w, template):
         "sentinel-1-rtc",
         bbox,
         day,
-        {"sat:orbit_state": {"eq": "descending"}, "sat:relative_orbit": {"eq": int(orbit)}},
+        {"sat:orbit_state": {"eq": "descending"}, "sat:relative_orbit": {"eq": int(float(orbit))}},
     )
     if not items:
         print(f"  нет S1 {day} orbit {orbit}", flush=True)
@@ -179,7 +191,8 @@ def fetch_s1(folder, prefix, day, orbit, bbox, transform, h, w, template):
     vh, _ = mosaic(items, "vh", transform, h, w, Resampling.bilinear)
     vv_db, vh_db = to_db(vv), to_db(vh)
     ratio = vv_db - vh_db
-    write_stack(dest, np.stack([vv_db, vh_db, ratio]), template)
+    write_stack(dest, np.stack([vv_db, vh_db, ratio]), template,
+                bands=("VV", "VH", "VV_VH_ratio"), scene_date=day, scene_meta=ids)
     frac = valid_frac(vv_db)
     print(f"  {dest.name}  сцены {ids}  VV конечны {frac:.2f}", flush=True)
     return frac > 0.3
@@ -211,7 +224,9 @@ def fetch_s2(folder, prefix, day, bbox, transform, h, w, template):
     awe = b2 + 2.5 * b3 - 1.5 * (b8 + b11) - 0.25 * b12
     awe[~np.isfinite(b2) | ~np.isfinite(b12)] = np.nan
     stack = np.stack([b3, b4, b8, b11, ndwi, mndwi, ndvi, awe])
-    write_stack(dest, stack, template)
+    write_stack(dest, stack, template,
+                bands=("B3", "B4", "B8", "B11", "NDWI", "MNDWI", "NDVI", "AWEIsh"),
+                scene_date=day, scene_meta=ids)
     print(f"  {dest.name}  сцены {ids}  оптика жива {valid_frac(ndwi):.2f}")
     return True
 
