@@ -245,6 +245,7 @@ def make_report(req: ReportRequest):
     pred_dir = ROOT / "out" / "predictions"
     summary = _pair_summary(row)
 
+    # разбивка по ROI
     contours = {}
     if req.bbox:
         bbox_4326 = req.bbox
@@ -256,9 +257,8 @@ def make_report(req: ReportRequest):
             cover = _bbox_intersects_mask(mask, transform, bbox_4326)
             contours[layer] = {"intersection_frac": round(cover, 4)}
     elif req.polygon:
-        # упрощённо — считаем площадь полигона через shapely, без реального clip
         poly = shape(req.polygon)
-        poly_area_m2 = poly.area  # приблизительно, в градусах²
+        poly_area_m2 = poly.area
         for layer in ("flood", "water_pre", "water_peak"):
             path = pred_dir / f"{req.pair_id}_{layer}.tif"
             if not path.exists():
@@ -266,20 +266,43 @@ def make_report(req: ReportRequest):
             mask, transform, scale, (w, h) = _read_mask(path)
             contours[layer] = {"polygon_area_m2": round(poly_area_m2, 4)}
 
-    # прирост/убыль
+    # прирост воды
     pre = summary["predicted_ha"].get("water_pre") or 0
     peak = summary["predicted_ha"].get("water_peak") or 0
     flood = summary["predicted_ha"].get("flood") or 0
+    ref_pre = summary["reference_ha"].get("water_pre") or 0
+    ref_peak = summary["reference_ha"].get("water_peak") or 0
+    ref_flood = summary["reference_ha"].get("flood") or 0
+
+    # описание на человеческом
+    descr = []
+    if peak and pre:
+        gain = peak - pre
+        descr.append(f"водное зеркало выросло на {gain:+.1f} га ({gain/100:+.3f} км²) с pre до peak")
+    if flood:
+        descr.append(f"новое затопление {flood:.1f} га ({flood/100:.3f} км²) "
+                     f"от {flood/float(row['aoi_km2'])*100:.3f}% AOI")
+    if ref_flood and not flood:
+        descr.append(f"эталон показывает {ref_flood:.1f} га затопления, "
+                     f"но предсказание дало 0 — вероятно, нет валидного S1 для этой пары")
 
     return {
         "pair_id": req.pair_id,
+        "description": "; ".join(descr) if descr else "нет данных",
         "aoi": {"name": row["aoi_name"], "km2": float(row["aoi_km2"])},
-        "predicted": summary["predicted_ha"],
-        "reference": summary["reference_ha"],
+        "dates": {"pre": row["date_pre_sar"], "peak": row["date_peak_sar"]},
+        "event": {"name": row["event_name"], "kind": row["event_kind"]},
+        "predicted_ha": summary["predicted_ha"],
+        "reference_ha": {k: round(v, 2) for k, v in summary["reference_ha"].items()},
         "gain_ha": round(peak - pre, 2),
         "gain_km2": round((peak - pre) / 100.0, 4),
-        "flood_share_of_aoi": round(flood / float(row["aoi_km2"]) * 100 / 100, 4) if row["aoi_km2"] else 0,
+        "flood_share_of_aoi_pct": round(flood / float(row["aoi_km2"]) * 100, 4) if row["aoi_km2"] else 0,
         "by_layer_in_roi": contours,
+        "masks_available": {
+            "flood": (pred_dir / f"{req.pair_id}_flood.tif").exists(),
+            "water_pre": (pred_dir / f"{req.pair_id}_water_pre.tif").exists(),
+            "water_peak": (pred_dir / f"{req.pair_id}_water_peak.tif").exists(),
+        },
     }
 
 
