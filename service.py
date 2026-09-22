@@ -76,7 +76,8 @@ def _read_mask(path: Path) -> tuple[np.ndarray, tuple, float, tuple]:
 
 def _mask_to_geojson(mask: np.ndarray, transform, scale: float, layer: str,
                     min_pixels: int = 5) -> list[dict]:
-    """Превращает бинарную маску в список полигонов (GeoJSON features) с площадью."""
+    """Превращает бинарную маску в список полигонов (GeoJSON в WGS84) с площадью."""
+    import rasterio.warp as rw
     feats = []
     for geom, val in rio_shapes(mask, mask=mask > 0, transform=transform):
         if val == 0:
@@ -88,9 +89,13 @@ def _mask_to_geojson(mask: np.ndarray, transform, scale: float, layer: str,
         if area_m2 / (scale * scale) < min_pixels:
             continue
         area_ha = round(area_m2 / 10_000.0, 2)
+        # конвертируем в WGS84 для отображения на Leaflet
+        poly_4326 = rw.transform_geom(
+            "EPSG:32652", "EPSG:4326", mapping(poly)
+        )
         feats.append({
             "type": "Feature",
-            "geometry": mapping(poly),
+            "geometry": poly_4326,
             "properties": {
                 "layer": layer,
                 "area_ha": area_ha,
@@ -98,6 +103,16 @@ def _mask_to_geojson(mask: np.ndarray, transform, scale: float, layer: str,
             },
         })
     return feats
+
+
+def _mask_bbox_wgs84(mask: np.ndarray, transform) -> list[float]:
+    """Bbox маски в WGS84: [west, south, east, north]."""
+    h, w = mask.shape
+    west, south, east, north = rasterio.transform.array_bounds(h, w, transform)
+    w_w, s_w, e_w, n_w = rasterio.warp.transform_bounds(
+        "EPSG:32652", "EPSG:4326", west, south, east, north
+    )
+    return [w_w, s_w, e_w, n_w]
 
 
 def _bbox_intersects_mask(mask: np.ndarray, transform, bbox_4326: list[float]) -> float:
@@ -198,11 +213,13 @@ def get_contours(pair_id: str,
         raise HTTPException(404, f"маска {layer} для {pair_id} не найдена")
     mask, transform, scale, (w, h) = _read_mask(path)
     feats = _mask_to_geojson(mask, transform, scale, layer, min_pixels=min_pixels)
+    bbox_wgs84 = _mask_bbox_wgs84(mask, transform)
     return {
         "type": "FeatureCollection",
         "pair_id": pair_id,
         "layer": layer,
-        "crs": "EPSG:32652",
+        "crs": "EPSG:4326",
+        "bbox_wgs84": bbox_wgs84,
         "features": feats,
     }
 
@@ -273,17 +290,18 @@ def get_layer_png(pair_id: str, layer: str):
     if path is None:
         raise HTTPException(404, f"маска {layer} для {pair_id} не найдена")
     mask, transform, scale, (w, h) = _read_mask(path)
-    # простой PNG: маска как 8-bit с альфой (прозрачно где 0, чёрное где 1)
+    bbox_wgs84 = _mask_bbox_wgs84(mask, transform)
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
-    rgba[..., 3] = (mask * 200)  # альфа
-    rgba[..., 0] = mask * 255    # красный канал
+    rgba[..., 3] = (mask * 200)
+    rgba[..., 0] = mask * 255
     rgba[..., 1] = 0
     rgba[..., 2] = 0
     from PIL import Image
     img = Image.fromarray(rgba, mode="RGBA")
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
-    return Response(content=buf.getvalue(), media_type="image/png")
+    return Response(content=buf.getvalue(), media_type="image/png",
+                    headers={"X-Mask-Bbox": ",".join(f"{x:.6f}" for x in bbox_wgs84)})
 
 
 # ----------------------------- map page -----------------------------
@@ -298,29 +316,29 @@ _MAP_HTML = """
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   body { margin: 0; font-family: sans-serif; }
-  #header { padding: 8px 12px; background: #1a1f2c; color: #fff; }
-  #header select { margin-left: 8px; }
+  #header { padding: 8px 12px; background: #1a1f2c; color: #fff; display: flex; align-items: center; gap: 12px; }
+  #header label { font-size: 13px; }
+  #header select { padding: 4px 8px; }
   #map { height: calc(100vh - 50px); }
-  .legend { background: #fff; padding: 8px; }
-  .legend span { display: block; margin: 4px 0; }
+  .legend { background: #fff; padding: 8px 12px; font-size: 13px; line-height: 1.6; }
   .legend .sw { display: inline-block; width: 16px; height: 12px; margin-right: 6px; vertical-align: middle; }
 </style>
 </head>
 <body>
 <div id="header">
-  <span>HydroWatch Amur:</span>
-  <select id="pair"></select>
-  <select id="layer">
+  <label>Пара: <select id="pair"></select></label>
+  <label>Слой: <select id="layer">
     <option value="flood">flood</option>
     <option value="water_pre">water_pre</option>
     <option value="water_peak">water_peak</option>
-  </select>
+  </select></label>
+  <span id="status" style="margin-left: auto; opacity: 0.7;"></span>
 </div>
 <div id="map"></div>
 <script>
   const map = L.map('map').setView([50.5, 127.5], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: 'OSM'
+    maxZoom: 18, attribution: '© OSM contributors'
   }).addTo(map);
 
   const legend = L.control({position: 'topright'});
@@ -328,6 +346,10 @@ _MAP_HTML = """
   legend.addTo(map);
 
   let pngLayer = null;
+  let contourLayer = null;
+
+  function setStatus(text) { document.getElementById('status').textContent = text; }
+  function setLegend(text) { document.querySelector('.legend').innerHTML = text; }
 
   async function loadPairs() {
     const r = await fetch('/pairs');
@@ -346,25 +368,37 @@ _MAP_HTML = """
     const pair = document.getElementById('pair').value;
     const layer = document.getElementById('layer').value;
     if (pngLayer) { map.removeLayer(pngLayer); pngLayer = null; }
+    if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
+    setStatus('загрузка...');
+
     try {
-      const url = '/layer/' + pair + '/' + layer + '.png';
-      const bounds = await fetch('/contours/' + pair + '?layer=' + layer).then(r => r.json());
-      if (!bounds.features.length) return;
-      const lats = [], lons = [];
-      bounds.features.forEach(f => {
-        const coords = f.geometry.coordinates[0];
-        coords.forEach(c => { lons.push(c[0]); lats.push(c[1]); });
-      });
-      const sw = [Math.min(...lats), Math.min(...lons)];
-      const ne = [Math.max(...lats), Math.max(...lons)];
-      pngLayer = L.imageOverlay(url, [sw, ne], {opacity: 0.6});
+      const cResp = await fetch('/contours/' + pair + '?layer=' + layer);
+      if (!cResp.ok) { setStatus('нет маски'); setLegend('нет маски'); return; }
+      const geo = await cResp.json();
+      const bbox = geo.bbox_wgs84;
+      const sw = [bbox[1], bbox[0]];
+      const ne = [bbox[3], bbox[2]];
+
+      // PNG-оверлей (полупрозрачный)
+      pngLayer = L.imageOverlay('/layer/' + pair + '/' + layer + '.png',
+                                [sw, ne], {opacity: 0.6, crossOrigin: true});
       pngLayer.addTo(map);
+
+      // Контурный слой (поверх PNG)
+      contourLayer = L.geoJSON(geo, {
+        style: { color: '#cc0033', weight: 1, fillOpacity: 0 }
+      }).addTo(map);
+
       map.fitBounds([sw, ne]);
-      document.querySelector('.legend').innerHTML =
+      setStatus(geo.features.length + ' полигонов');
+      setLegend(
         '<b>' + pair + ' / ' + layer + '</b><br>' +
-        '<span><i class="sw" style="background:#c00"></i>вода</span>';
+        '<span><i class="sw" style="background:#c00;opacity:0.6"></i>вода</span>' +
+        '<span><i class="sw" style="background:#c03;border:1px solid #c03"></i>контур</span>'
+      );
     } catch(e) {
-      document.querySelector('.legend').innerHTML = 'нет маски';
+      setStatus('ошибка: ' + e.message);
+      setLegend('ошибка загрузки');
     }
   }
 
