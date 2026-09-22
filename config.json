@@ -1,8 +1,8 @@
 {
   "seed": 0,
-  "median_size": 3,
+  "median_size": 5,
   "vv_db_min": -22.0,
-  "vv_db_max": -12.0,
+  "vv_db_max": -17.0,
   "vv_valid_min": -40.0,
   "vv_valid_max": 10.0,
   "mndwi_min": 0.1,

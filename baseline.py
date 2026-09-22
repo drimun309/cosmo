@@ -144,9 +144,11 @@ def one_date(s1_path: Path, s2_path: Path | None, keep: np.ndarray, cfg) -> tupl
 
 def hydro_keep(aux, cfg) -> tuple[np.ndarray, np.ndarray]:
     slope, hand, occurrence, _, _, builtup = aux
-    keep = np.isfinite(slope) & (slope <= cfg["slope_max_deg"])
-    keep &= np.isfinite(hand) & (hand <= cfg["hand_max_m"])
-    keep &= ~(np.isfinite(builtup) & (builtup >= cfg["builtup_min"]))
+    # Если AUX покрывает пиксель — применяем фильтр; иначе NaN трактуется как "нет данных — пропускаем".
+    slope_ok = np.where(np.isfinite(slope), slope <= cfg["slope_max_deg"], True)
+    hand_ok = np.where(np.isfinite(hand), hand <= cfg["hand_max_m"], True)
+    builtup_block = np.where(np.isfinite(builtup), builtup >= cfg["builtup_min"], False)
+    keep = slope_ok & hand_ok & ~builtup_block
     permanent = np.isfinite(occurrence) & (occurrence >= cfg["occurrence_permanent"])
     return keep, permanent
 
